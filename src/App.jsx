@@ -1,8 +1,8 @@
+import { animate, motion, useMotionValue, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { CgMenuRight } from "react-icons/cg";
 
-export default function App() {
-  // === DATA ===
+function App() {
   const sections = [
     { id: 0, title: "Intro", text: "Apple. The man. A few quotes." },
     { id: 1, title: "Keynote", text: "Stage presence & storytelling." },
@@ -10,94 +10,149 @@ export default function App() {
     { id: 3, title: "Legacy", text: "The aftermath & memory." },
   ];
 
-  // === LAYOUT ===
-  const [viewportH, setViewportH] = useState(window.innerHeight);
+  const [open, setOpen] = useState(false);
+
+  const y = useMotionValue(0);
+  const containerRef = useRef(null);
+  const trackRef = useRef(null);
+
+  // vertical progress bar
+  const yProgress = useTransform(y, (v) => {
+    const container = containerRef.current;
+    if (!container) return 0;
+    const totalHeight = container.scrollHeight;
+    const maxScroll = totalHeight - window.innerHeight;
+    return Math.min(Math.max(-v / maxScroll, 0), 1);
+  });
+  const yProgressHeight = useTransform(yProgress, (p) => `${p * 100}%`);
+
   useEffect(() => {
-    const resize = () => setViewportH(window.innerHeight);
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, []);
+    // resolve refresh bug
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    y.set(0);
 
-  const contentH = sections.length * viewportH;
-  const maxScroll = contentH - viewportH;
+    const container = containerRef.current;
+    const maxScroll = container.scrollHeight - window.innerHeight;
 
-  // === MOTION VALUES ===
-  const y = useMotionValue(0); // main content position
-  const trackHeight = 200;
-  const scrollProgress = useTransform(y, (val) => -val / maxScroll);
-  const fillHeight = useTransform(scrollProgress, (p) => p * trackHeight);
-
-  // === HELPERS ===
-  const scrollTo = (next) => {
-    if (next > 0) next = 0;
-    if (next < -maxScroll) next = -maxScroll;
-    animate(y, next, { type: "spring", stiffness: 80, damping: 20 });
-  };
-
-  const snapToNearest = () => {
-    const raw = -y.get(); // positive scroll value
-    const index = Math.round(raw / viewportH);
-    const next = -(index * viewportH);
-    animate(y, next, { type: "spring", stiffness: 100, damping: 25 });
-  };
-
-  // === WHEEL SCROLL ===
-  useEffect(() => {
+    // wheel / touchpad
     const onWheel = (e) => {
-      e.preventDefault();
-      scrollTo(y.get() - e.deltaY * 2);
-    };
-    window.addEventListener("wheel", onWheel, { passive: false });
-    return () => window.removeEventListener("wheel", onWheel);
-  }, [maxScroll]);
+      let newY = y.get() - e.deltaY;
 
-  // === TOUCH SCROLL ===
-  useEffect(() => {
+      // 0 >= y >= -maxScroll
+      if (newY > 0) newY = 0;
+      if (newY < -maxScroll) newY = -maxScroll;
+
+      animate(y, newY, { type: "spring", stiffness: 1000, damping: 20 });
+      // console.log(yProgress);
+    };
+
+    // mobile touch
     let startY = 0;
-    const onTouchStart = (e) => {
-      startY = e.touches[0].clientY;
-    };
-    const onTouchMove = (e) => {
-      const delta = e.touches[0].clientY - startY;
-      scrollTo(y.get() + delta * 1.5);
-      startY = e.touches[0].clientY;
-    };
-    const onTouchEnd = () => snapToNearest();
 
-    window.addEventListener("touchstart", onTouchStart, { passive: false });
-    window.addEventListener("touchmove", onTouchMove, { passive: false });
-    window.addEventListener("touchend", onTouchEnd);
+    const onTchS = (e) => {
+      startY = e.touches[0].clientY;
+    };
+    const onTchM = (e) => {
+      const currY = e.touches[0].clientY;
+      const deltaY = currY - startY;
+
+      let newY = y.get() + deltaY * 10;
+
+      // 0 >= y >= -maxScroll
+      if (newY > 0) newY = 0;
+      if (newY < -maxScroll) newY = -maxScroll;
+
+      animate(y, newY, {
+        type: "tween",
+        ease: "easeOut",
+        duration: 0.4,
+      });
+      startY = currY;
+    };
+
+    window.addEventListener("wheel", onWheel);
+    window.addEventListener("touchstart", onTchS);
+    window.addEventListener("touchmove", onTchM);
 
     return () => {
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchstart", onTchS);
+      window.removeEventListener("touchmove", onTchM);
     };
-  }, [maxScroll, viewportH]);
+  }, [y]);
 
-  // === CLICK & HOLD ON TRACK ===
-  const holdRef = useRef(null);
-  const startHold = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const update = () => {
-      const clickY = e.clientY - rect.top;
-      const progress = clickY / trackHeight;
-      const next = -(progress * maxScroll);
-      scrollTo(next);
+  // Handle track click & drag
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const maxScroll = container.scrollHeight - window.innerHeight;
+
+    let isDragging = false;
+    let startY = 0;
+    let moved = false; // flag to detect drag vs click
+
+    // helper function
+    const calculateNewY = (clientY) => {
+      const rect = track.getBoundingClientRect();
+      const posY = clientY - rect.top;
+      const ratio = Math.min(Math.max(posY / rect.height, 0), 1);
+      return -ratio * maxScroll;
     };
-    update();
-    holdRef.current = setInterval(update, 200); // repeat while holding
-  };
-  const stopHold = () => {
-    clearInterval(holdRef.current);
-    holdRef.current = null;
-  };
 
-  // === RENDER ===
+    const handlePointerDown = (e) => {
+      isDragging = true;
+      moved = false;
+      startY = e.clientY;
+
+      // y.set(calculateNewY(e.clientY));
+      animate(y, calculateNewY(e.clientY), { type: "tween", duration: 0.5 });
+
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
+
+      if (track.setPointerCapture) track.setPointerCapture(e.pointerId);
+    };
+
+    const handlePointerMove = (e) => {
+      if (!isDragging) return;
+
+      requestAnimationFrame(() => {
+        y.set(calculateNewY(e.clientY));
+      });
+    };
+
+    const handlePointerUp = (e) => {
+      if (!moved) {
+        animate(y, calculateNewY(e.clientY), { type: "tween", duration: 0.5 });
+      }
+
+      isDragging = false;
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+
+    track.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      track.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [y]);
+
   return (
-    <div className="w-screen h-screen overflow-hidden bg-black text-white relative">
-      {/* content */}
-      <motion.div style={{ y }}>
+    <>
+      <motion.section
+        ref={containerRef}
+        style={{ y }}
+        className="text-white"
+      >
         {sections.map((s) => (
           <section
             key={s.id}
@@ -108,60 +163,31 @@ export default function App() {
             <p className="text-xl max-w-2xl">{s.text}</p>
           </section>
         ))}
-      </motion.div>
+      </motion.section>
 
-      {/* custom scrollbar */}
+      <CgMenuRight
+        onClick={() => setOpen(!open)}
+        className="fixed top-4 right-4 z-50 md:hidden flex flex-col justify-between text-2xl text-white"
+      />
+
+      {/* scroll progress bar */}
       <div
-        className="absolute right-6 top-1/2 -translate-y-1/2"
-        style={{
-          height: trackHeight,
-          width: 8,
-          background: "#334155",
-          borderRadius: 4,
-          // position: "relative",
-        }}
-        onMouseDown={startHold}
-        onMouseUp={stopHold}
-        onMouseLeave={stopHold}
+        ref={trackRef}
+        className={`
+          fixed right-3 top-1/2 -translate-y-1/2 h-[80vh] w-[3px] rounded-md touch-none
+          bg-gray-400 hover:w-[4.5px]
+          transition-all duration-300
+          md:block
+          ${open ? "block" : "hidden"}
+        `}
       >
-        {/* fill bar */}
         <motion.div
-          style={{
-            height: fillHeight,
-            width: "100%",
-            background: "#38bdf8",
-            borderRadius: 4,
-            originY: 0,
-          }}
-        />
-
-        {/* draggable thumb */}
-        <motion.div
-          drag="y"
-          dragConstraints={{ top: 0, bottom: trackHeight }}
-          dragElastic={0}
-          onDrag={(e, info) => {
-            const rect = e.target.parentNode.getBoundingClientRect();
-            const relativeY = info.point.y - rect.top;
-            const progress = Math.min(Math.max(relativeY / trackHeight, 0), 1);
-            const next = -(progress * maxScroll);
-            y.set(next);
-          }}
-          onDragEnd={snapToNearest}
-          style={{
-            y: fillHeight,
-            left: "50%",
-            translateX: "-50%",
-            width: 12,
-            height: 12,
-            borderRadius: "50%",
-            background: "transparent",
-            position: "absolute",
-            top: 0,
-            cursor: "grab",
-          }}
+          style={{ height: yProgressHeight }}
+          className="w-full bg-blue-500 rounded-md origin-top"
         />
       </div>
-    </div>
+    </>
   );
 }
+
+export default App;
