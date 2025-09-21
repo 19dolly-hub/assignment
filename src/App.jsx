@@ -27,12 +27,10 @@ function App() {
   ];
 
   const [open, setOpen] = useState(false);
-  // const [secHArr, setSecHArr] = useState([]);
 
   const y = useMotionValue(0);
   const containerRef = useRef(null);
   const trackRef = useRef(null);
-  // const sectionRefs = useRef([]);
 
   // vertical progress bar
   const yProgress = useTransform(y, (v) => {
@@ -45,11 +43,6 @@ function App() {
   const yProgressHeight = useTransform(yProgress, (p) => `${p * 100}%`);
 
   useEffect(() => {
-    // const arr = sectionRefs.current.map((e) =>
-    //   Math.floor((e.scrollHeight / containerRef.current.scrollHeight) * 100)
-    // );
-    // setSecHArr(arr);
-
     // resolve refresh bug
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
@@ -175,7 +168,6 @@ function App() {
         {sections.map((s) => (
           <section
             key={s.id}
-            // ref={(el) => (sectionRefs.current[i] = el)}
             className="min-h-screen p-15 flex flex-col items-center justify-center"
             style={{ background: s.id % 2 === 0 ? "#0f172a" : "#1e293b" }}
           >
@@ -191,28 +183,6 @@ function App() {
       />
 
       {/* scroll progress bar */}
-      {/* <div
-        ref={trackRef}
-        className={`
-          group fixed right-0 top-1/2 -translate-y-1/2 h-[80vh] w-[10vw] touch-none
-        `}
-      >
-        <div className={`
-          fixed right-4 top-1/2 -translate-y-1/2 h-[80vh] w-[2px] rounded-md group-hover:w-[5px] cursor-pointer
-          transition-all duration-300
-          md:flex flex-col gap-[5px]
-          ${open ? "flex" : "hidden"}
-        `}>
-
-        {secHArr.map((h, i) => (
-          <div
-            key={i}
-            className="w-full bg-gray-400"
-            style={{ height: h + "%" }}
-          ></div>
-        ))}
-        </div>
-      </div> */}
       <div className="group fixed right-0 top-1/2 -translate-y-1/2 h-[80vh] w-[10vw] touch-none">
         <div
           ref={trackRef}
