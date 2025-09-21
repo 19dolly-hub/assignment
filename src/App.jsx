@@ -168,7 +168,7 @@ function App() {
         {sections.map((s) => (
           <section
             key={s.id}
-            className="min-h-screen p-15 flex flex-col items-center justify-center"
+            className="min-h-screen p-15 pl-6 flex flex-col items-center justify-center"
             style={{ background: s.id % 2 === 0 ? "#0f172a" : "#1e293b" }}
           >
             <h2 className="text-5xl font-bold mb-6">{s.title}</h2>
@@ -183,12 +183,11 @@ function App() {
       />
 
       {/* scroll progress bar */}
-      <div className="group fixed right-0 top-1/2 -translate-y-1/2 h-[80vh] w-[10vw] touch-none">
+      <div className="ref={trackRef} group fixed right-0 top-1/2 -translate-y-1/2 h-[80vh] w-[10vw] touch-none cursor-pointer">
         <div
-          ref={trackRef}
           className={`
-          fixed right-4 top-1/2 -translate-y-1/2 h-[80vh] w-[3px] rounded-md
-          bg-gray-400 group-hover:w-[5px] cursor-pointer
+          fixed right-5 top-1/2 -translate-y-1/2 h-[70vh] md:h-[80vh] w-[3px] rounded-md
+          bg-gray-400 group-hover:w-[5px]
           transition-all duration-300
           md:block
           ${open ? "block" : "hidden"}
