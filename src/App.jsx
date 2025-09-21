@@ -4,10 +4,26 @@ import { CgMenuRight } from "react-icons/cg";
 
 function App() {
   const sections = [
-    { id: 0, title: "Intro", text: "Apple. The man. A few quotes." },
-    { id: 1, title: "Keynote", text: "Stage presence & storytelling." },
-    { id: 2, title: "Design", text: "Simplicity & craft." },
-    { id: 3, title: "Legacy", text: "The aftermath & memory." },
+    {
+      id: 0,
+      title: "Intro",
+      text: "Apple. The man. A few quotes. Lorem ipsum dolor sit amet consectetur adipisicing elit. Alias placeat veniam earum, cum quasi vitae cupiditate doloremque illo quae architecto nobis quod aliquid, officiis tenetur saepe dolorum ducimus, molestiae corporis sunt. At rem accusantium molestiae nihil odio animi voluptatum doloribus alias ullam nulla esse laudantium quisquam, officia ex rerum hic reprehenderit perspiciatis, aut vel recusandae? Voluptates saepe nam impedit in molestias, est cum culpa qui placeat dicta dignissimos ab, rerum ut sit error quae expedita harum quis alias ipsa enim maxime, hic accusamus. Commodi, esse odio culpa praesentium pariatur voluptatum fuga officia laboriosam veritatis necessitatibus, incidunt veniam corrupti omnis ut!",
+    },
+    {
+      id: 1,
+      title: "Keynote",
+      text: "Stage presence & storytelling. Lorem ipsum dolor sit amet consectetur adipisicing elit. Repudiandae obcaecati vel nobis esse, numquam maiores veniam voluptatem nisi a dolorem quis necessitatibus! Nam cumque necessitatibus maxime nesciunt. Aspernatur exercitationem delectus voluptatem nemo in magni pariatur numquam incidunt accusantium debitis cumque, quo tenetur corporis, nobis perferendis culpa voluptas ipsam totam laboriosam tempora, quasi quam expedita laudantium? Ut veritatis, dicta minima, in mollitia aliquid nam nostrum quasi animi voluptatum similique. Natus aperiam quo consectetur, eius repellendus error cumque nam reprehenderit accusamus quod rerum ex omnis mollitia odio totam magni repudiandae odit earum! Architecto vero fugiat sequi facilis distinctio laudantium deleniti, recusandae aliquid dicta error quibusdam deserunt repellat vitae doloribus soluta eos totam dolorem eius ea optio consequatur! Aperiam, non cum quae odio minus asperiores ab, vero nemo reiciendis voluptas ad sint esse! Maxime totam a sequi minima quod eaque consectetur ipsam atque magnam provident porro, consequatur delectus. Consequatur voluptates tempora illo et!",
+    },
+    {
+      id: 2,
+      title: "Design",
+      text: "Simplicity & craft. Lorem ipsum dolor sit, amet consectetur adipisicing elit. Iure officiis molestiae aliquam sunt pariatur id voluptates maxime, adipisci voluptate numquam esse fuga quidem, voluptatibus minus recusandae laborum nemo. Reiciendis natus hic facere incidunt? Quidem corrupti, aut accusantium reprehenderit tempore rerum mollitia aliquam pariatur blanditiis praesentium iusto. Ipsam eius ea delectus.",
+    },
+    {
+      id: 3,
+      title: "Legacy",
+      text: "The aftermath & memory. Lorem ipsum dolor sit, amet consectetur adipisicing elit. Iure officiis molestiae aliquam sunt pariatur id voluptates maxime, adipisci voluptate numquam esse fuga quidem, voluptatibus minus recusandae laborum nemo. Reiciendis natus hic facere incidunt? Quidem corrupti, aut accusantium reprehenderit tempore rerum mollitia aliquam pariatur blanditiis praesentium iusto. Ipsam eius ea delectus.",
+    },
   ];
 
   const [open, setOpen] = useState(false);
@@ -44,7 +60,7 @@ function App() {
       if (newY > 0) newY = 0;
       if (newY < -maxScroll) newY = -maxScroll;
 
-      animate(y, newY, { type: "spring", stiffness: 1000, damping: 20 });
+      animate(y, newY, { type: "tween", ease: "easeOut", duration: 0.1 });
       // console.log(yProgress);
     };
 
@@ -67,7 +83,7 @@ function App() {
       animate(y, newY, {
         type: "tween",
         ease: "easeOut",
-        duration: 0.4,
+        duration: 0.2,
       });
       startY = currY;
     };
@@ -148,15 +164,11 @@ function App() {
 
   return (
     <>
-      <motion.section
-        ref={containerRef}
-        style={{ y }}
-        className="text-white"
-      >
+      <motion.section ref={containerRef} style={{ y }} className="text-white">
         {sections.map((s) => (
           <section
             key={s.id}
-            className="h-screen flex flex-col items-center justify-center text-center"
+            className="min-h-screen p-15 pl-6 flex flex-col items-center justify-center"
             style={{ background: s.id % 2 === 0 ? "#0f172a" : "#1e293b" }}
           >
             <h2 className="text-5xl font-bold mb-6">{s.title}</h2>
@@ -167,24 +179,25 @@ function App() {
 
       <CgMenuRight
         onClick={() => setOpen(!open)}
-        className="fixed top-4 right-4 z-50 md:hidden flex flex-col justify-between text-2xl text-white"
+        className="fixed top-4 right-4 z-50 cursor-pointer md:hidden flex flex-col justify-between text-2xl text-white"
       />
 
       {/* scroll progress bar */}
-      <div
-        ref={trackRef}
-        className={`
-          fixed right-3 top-1/2 -translate-y-1/2 h-[80vh] w-[3px] rounded-md touch-none
-          bg-gray-400 hover:w-[4.5px]
+      <div ref={trackRef} className="group fixed right-0 top-1/2 -translate-y-1/2 h-[70vh] md:h-[80vh] w-[10vw] touch-none cursor-pointer">
+        <div
+          className={`
+          fixed right-5 top-1/2 -translate-y-1/2 h-[70vh] md:h-[80vh] w-[3px] rounded-md
+          bg-gray-400 group-hover:w-[5px]
           transition-all duration-300
           md:block
           ${open ? "block" : "hidden"}
         `}
-      >
-        <motion.div
-          style={{ height: yProgressHeight }}
-          className="w-full bg-blue-500 rounded-md origin-top"
-        />
+        >
+          <motion.div
+            style={{ height: yProgressHeight }}
+            className="w-full bg-blue-500 rounded-md origin-top"
+          />
+        </div>
       </div>
     </>
   );
