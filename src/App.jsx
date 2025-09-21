@@ -83,7 +83,7 @@ function App() {
       animate(y, newY, {
         type: "tween",
         ease: "easeOut",
-        duration: 0.4,
+        duration: 0.2,
       });
       startY = currY;
     };
