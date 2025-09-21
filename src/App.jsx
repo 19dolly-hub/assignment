@@ -183,7 +183,7 @@ function App() {
       />
 
       {/* scroll progress bar */}
-      <div ref={trackRef} className="group fixed right-0 top-1/2 -translate-y-1/2 h-[80vh] w-[10vw] touch-none cursor-pointer">
+      <div ref={trackRef} className="group fixed right-0 top-1/2 -translate-y-1/2 h-[70vh] md:h-[80vh] w-[10vw] touch-none cursor-pointer">
         <div
           className={`
           fixed right-5 top-1/2 -translate-y-1/2 h-[70vh] md:h-[80vh] w-[3px] rounded-md
